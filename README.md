@@ -1,70 +1,149 @@
-# Digital Wallet Recharge System
+# 💳 Digital Wallet & Payment Recharge System
 
-A Flutter digital wallet with simulated PayFast Pakistan payments — built for an
-internship assignment. Runs on Android with a night-flight instrument-panel UI;
-phases 1–2 complete (UI + simulated payments), Firebase integration designed and
-ready to wire.
+A modern, high-performance Flutter digital wallet application built with a sleek **dark flight-instrument UI**, secure authentication, real-time balance tracking, and seamless payment processing.
 
-## Status
+Designed to operate in **Dual Mode**:
+1. **Local Mode (Zero Config):** Works instantly out-of-the-box with in-memory stores and simulated payments.
+2. **Firebase Mode:** Connects to **Firebase Authentication** (Email/Password & Phone OTP with silent device verification) and **Cloud Firestore** for real-time wallet synchronization.
 
-| Phase | Status |
-|---|---|
-| 1 — Flutter UI (all screens) | ✅ Complete |
-| 2 — Wallet logic + simulated payments | ✅ Complete |
-| 3 — Firebase (Auth + Firestore) | 🟡 Code ready — needs `google-services.json` |
-| 4 — FastAPI backend | 📝 Designed (`docs/production_architecture.md`) |
-| 5 — PayFast sandbox integration | 📝 Designed |
+---
 
-## Quick start
+## 📱 App Screenshots
 
-```bash
-flutter pub get
-flutter analyze          # 0 issues
-flutter test             # 8 tests pass
-flutter run              # or: flutter build apk --debug
+| 1. Wallet Dashboard | 2. Recharge Wallet | 3. Payment Confirmation |
+| :---: | :---: | :---: |
+| <img src="app_images/dashboard.png" width="260" alt="Wallet Dashboard" /> | <img src="app_images/recharge.png" width="260" alt="Recharge Wallet" /> | <img src="app_images/payment_success.png" width="260" alt="Payment Successful" /> |
+
+| 4. Transaction History | 5. User Profile & Account |
+| :---: | :---: |
+| <img src="app_images/transaction_history.png" width="260" alt="Transaction History" /> | <img src="app_images/profile.png" width="260" alt="User Profile" /> |
+
+---
+
+## ✨ Key Features
+
+* **Real-Time Wallet Dashboard:**
+  * Displays current balance in PKR with live connection indicators.
+  * Quick metrics: Total Recharged, Total Transactions, and Recent Activity.
+* **Wallet Top-Up & Recharge:**
+  * Quick-select preset amounts (PKR 500, PKR 1,000, PKR 5,000) or enter a custom amount.
+  * Integrated simulated payment gateway (PayFast Pakistan lifecycle).
+  * Instant feedback with payment success animation and detailed receipt.
+* **Transaction History:**
+  * Categorized history (All, Recharge, Charges) with status chips (`COMPLETED`, `PENDING`, `FAILED`).
+  * Chronological sorting and date formatting.
+* **Dual-Mode Authentication:**
+  * Email & password login and registration.
+  * **Phone Number Verification:** 6-digit OTP verification via Firebase Auth.
+  * **Silent Device Verification:** Automatic bypass for test phone numbers (`appVerificationDisabledForTesting: true`) on emulators to prevent disruptive reCAPTCHA puzzles.
+* **Clean Instrument Panel Design:**
+  * Futuristic dark theme with emerald green accents, crisp typography, and micro-interactions.
+
+---
+
+## 🏗️ Architecture & Project Structure
+
+The project follows a clean service-oriented architecture with decoupled UI and business logic:
+
+```text
+lib/
+├── constants/       # App styling, color palettes, strings, and config limits
+├── firebase/        # Firebase bootstrap and configuration detection
+├── models/          # Data classes (AppUser, WalletTransaction, PaymentResult)
+├── screens/         # Feature UI screens
+│   ├── auth/        # Login, Register, Phone Verification
+│   ├── home/        # Shell and tab navigation
+│   ├── profile/     # User profile and account management
+│   ├── splash/      # Splash screen and session restoration
+│   ├── transactions/# Transaction history list and filters
+│   └── wallet/      # Dashboard and recharge flows
+├── services/        # Business logic services (AuthService, WalletService, PaymentService)
+├── utils/           # Input validation (Pakistani phone, email) and formatters
+└── widgets/         # Reusable design system UI components
 ```
 
-No accounts required — the prototype simulates payments and persists the session
-locally. Full setup (incl. Firebase wiring) in [`docs/setup_guide.md`](docs/setup_guide.md).
+---
 
-Simulated gateway: any whole amount succeeds · `9999` = declined · `8888` = timeout.
+## 🚀 Getting Started
 
-## Features
+### Prerequisites
+* Flutter SDK: `^3.12.0` or later
+* Dart SDK: `^3.0.0`
+* Android Studio / VS Code with Flutter extensions
+* Android Emulator or physical device
 
-- Splash, login, registration, wallet dashboard, recharge, transaction history, profile, settings
-- Simulated PayFast lifecycle: create → confirm → verify (success / decline / timeout)
-- SharedPreferences session persistence
-- Demo account: `ali@demo.com` / `demo1234` (seeds PKR 8,900)
-- Amount validation: whole PKR, 1–1,000,000
-- 8 passing widget/unit tests, clean `flutter analyze`
+### 1. Clone & Install
+```bash
+git clone https://github.com/safi892/payment-system-demo-.git
+cd payment_system
+flutter pub get
+```
 
-## Architecture
+### 2. Run the App (Zero-Config / Simulated Mode)
+You can run the app immediately without setting up any backend or API keys:
+```bash
+flutter run
+```
+* **Demo Login:** Use `ali@demo.com` / `demo1234` or register a new account.
+* **Simulation Rules:**
+  * Any valid whole amount (`1` to `1,000,000`) succeeds.
+  * Amount `9999` simulates a **Declined** transaction.
+  * Amount `8888` simulates a **Timeout** scenario.
 
-- `lib/` — Flutter app: `screens/`, `services/`, `models/`, `widgets/`, `utils/`
-- Services are swappable — Phase 5 swaps `PaymentService` internals only; UI unchanged
-- `docs/production_architecture.md` — layered architecture, API design, sequence diagrams
-- `docs/firebase_architecture.md` — schema, data flows, rules rationale, offline/realtime
-- `docs/research.md` — gateway comparison + PayFast API study
-- `docs/security.md` — threat model and controls
-- `docs/test_report.md` — test results and Phase 3+ plan
-- `firebase/` — Firestore rules + composite indexes (deploy with `firebase deploy`)
+---
 
-## Design world
+## 🔥 Firebase Setup (Optional)
 
-Night-flight instrument panel — radar blue, phosphor green, amber accents, mono
-typography. Direction contract documented at the top of `lib/main.dart`.
+To enable live cloud authentication and Firestore synchronization:
 
-## Deliverables index
+1. Create a project in the [Firebase Console](https://console.firebase.google.com/).
+2. Add an Android app with the package name `com.example.payment_system`.
+3. Add your SHA-1 and SHA-256 fingerprints:
+   ```bash
+   keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+   ```
+4. Download `google-services.json` and place it in:
+   ```text
+   android/app/google-services.json
+   ```
+   *(Note: This file is strictly excluded by `.gitignore` to prevent sensitive credentials from being committed to GitHub).*
+5. Run the app:
+   ```bash
+   flutter run
+   ```
+   The app will automatically detect `google-services.json` and switch to live Firebase mode!
 
-| Deliverable | Where |
-|---|---|
-| Plan | [`PLAN.md`](PLAN.md) |
-| Research | [`docs/research.md`](docs/research.md) |
-| Architecture + diagrams | [`docs/production_architecture.md`](docs/production_architecture.md) |
-| Firebase schema & rules rationale | [`docs/firebase_architecture.md`](docs/firebase_architecture.md) |
-| Firestore rules / indexes | [`firebase/firestore.rules`](firebase/firestore.rules) · [`firebase/firestore.indexes.json`](firebase/firestore.indexes.json) |
-| Setup & deployment | [`docs/setup_guide.md`](docs/setup_guide.md) |
-| Firebase wiring (step-by-step) | [`docs/firebase_wiring_guide.md`](docs/firebase_wiring_guide.md) |
-| Test report | [`docs/test_report.md`](docs/test_report.md) |
-| Security | [`docs/security.md`](docs/security.md) |
-| Demo script / presentation | `docs/demo_script.md` · `docs/presentation_outline.md` |
+### 📱 Testing Phone Verification for Free (No Captchas & No SMS Fees)
+1. In Firebase Console, navigate to **Authentication** > **Sign-in method** > **Phone**.
+2. Under **Phone numbers for testing**, add:
+   * **Phone:** `+92 300 0000000` (or your test number)
+   * **SMS Code:** `123456`
+3. In the app's phone verification screen, enter `03000000000`.
+4. The app automatically skips the reCAPTCHA challenge on emulators and accepts `123456` instantly.
+
+---
+
+## 🔒 Security Practices
+
+* **Zero Secret Leakage:** All Firebase credentials, service accounts, and API keys are ignored by Git via `.gitignore`.
+* **Safe Input Validation:** Strict regex validation for email addresses, Pakistani phone numbers (`03XXXXXXXXX`), and currency boundaries.
+* **Firestore Security Rules:** Located in `firebase/firestore.rules` to enforce authenticated read/write access per user document.
+
+---
+
+## 🧪 Testing & Code Quality
+
+Verify that the code adheres to clean architecture and passes all checks:
+
+```bash
+# Check code style & lints (0 warnings)
+flutter analyze
+
+# Run unit and widget tests
+flutter test
+```
+
+---
+
+## 📄 License
+This project is open-source and available under the [MIT License](LICENSE).
