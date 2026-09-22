@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 
 import 'constants/app_colors.dart';
 import 'constants/app_strings.dart';
+import 'firebase/firebase_bootstrap.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/phone_verification_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/profile/profile_screen.dart';
@@ -12,43 +14,11 @@ import 'screens/splash/splash_screen.dart';
 import 'screens/transactions/transaction_history_screen.dart';
 import 'screens/wallet/recharge_screen.dart';
 
-// ═══════════════════════════════════════════════════════════════════════
-// DIRECTION CONTRACT — night-flight instrument panel
-//
-// THESIS: a digital wallet that reads like a flight instrument at night.
-// Money is a reading, not a decoration; the app refuses the bright,
-// card-stack fintech default and instead trusts luminous digits on a
-// matte black panel.
-//
-// OWN-WORLD: matte black panel ground (#0A0D11); instrument faces in
-// raised charcoal with hairline divisions; luminous white markings for
-// every label and figure; radium-green for live values and the primary
-// action; amber and red reserved for caution and failure only; tabular
-// numerals everywhere money is shown.
-//
-// STORY: the visitor powers on, sees the gauge sweep, signs in, and
-// reads their balance as the primary instrument. Recharging runs a
-// three-stage cross-check (create → confirm → verify) and only then
-// does the balance needle move. Failure keeps the balance untouched —
-// exactly how server-side verification behaves.
-//
-// FIRST VIEWPORT: splash — gauge needle sweeps from -120° to 120° on a
-// hairline ring, name + placard rise in. Then the wallet dashboard:
-// gauge mark and owner ring above, balance as a full-width instrument
-// face (placard + LIVE lamp + 46pt tabular digits), two supporting
-// readouts (total recharged, transaction count), the radium RECHARGE
-// control, and the recent-activity cross-check below.
-//
-// FORM: aviation instrument six-pack grammar; the gauge mark is the
-// logo, placards are labels, lamps are status, lists read like cross-
-// checks. Seed: 83680673.
-//
-// FINISH: unreviewed and undocumented is unfinished; this build ends
-// with the finish review, the verdict, and DESIGN.md.
-// ═══════════════════════════════════════════════════════════════════════
-
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Tries Firebase; on missing/broken config the services fall back to the
+  // simulated implementation, so the app always runs.
+  await FirebaseBootstrap.initialize();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -75,6 +45,7 @@ class PaymentApp extends StatelessWidget {
         '/': (_) => const SplashScreen(),
         Routes.login: (_) => const LoginScreen(),
         Routes.register: (_) => const RegisterScreen(),
+        Routes.verifyPhone: (_) => const PhoneVerificationScreen(),
         Routes.home: (_) => const HomeScreen(),
         Routes.recharge: (_) => const RechargeScreen(),
         Routes.history: (_) => const TransactionHistoryScreen(),

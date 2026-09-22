@@ -45,8 +45,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final nameError = Validators.name(_name.text);
     final emailError = Validators.email(_email.text);
     final passwordError = Validators.password(_password.text);
-    final confirmError =
-        Validators.confirmPassword(_confirm.text, _password.text);
+    final confirmError = Validators.confirmPassword(
+      _confirm.text,
+      _password.text,
+    );
     setState(() {
       _nameError = nameError;
       _emailError = emailError;
@@ -54,8 +56,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _confirmError = confirmError;
       _formError = null;
     });
-    if ([nameError, emailError, passwordError, confirmError]
-        .any((e) => e != null)) {
+    if ([
+      nameError,
+      emailError,
+      passwordError,
+      confirmError,
+    ].any((e) => e != null)) {
       return;
     }
 
@@ -67,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _password.text,
       );
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(Routes.home);
+      Navigator.of(context).pushReplacementNamed(Routes.verifyPhone);
     } on AppException catch (e) {
       if (!mounted) return;
       setState(() => _formError = e.message);
@@ -85,7 +91,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         foregroundColor: AppColors.luminous,
         elevation: 0,
         centerTitle: false,
-        title: const PlacardLabel('NEW PANEL', size: 11, spacing: 2.4, color: AppColors.dim),
+        title: const PlacardLabel(
+          'NEW PANEL',
+          size: 11,
+          spacing: 2.4,
+          color: AppColors.dim,
+        ),
       ),
       body: SafeArea(
         top: false,
@@ -140,16 +151,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscure: _obscure,
                       errorText: _passwordError,
                       onChanged: (_) => setState(() {
-                            _formError = null;
-                            _confirmError = null;
-                          }),
+                        _formError = null;
+                        _confirmError = null;
+                      }),
                       prefixIcon: Icons.lock_outline_rounded,
                       autofillHints: const [AutofillHints.newPassword],
                       textInputAction: TextInputAction.next,
                       suffix: IconButton(
                         onPressed: () => setState(() => _obscure = !_obscure),
                         icon: Icon(
-                          _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          _obscure
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
                           size: 20,
                           color: AppColors.faint,
                         ),
@@ -163,9 +176,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscure: _obscure,
                       errorText: _confirmError,
                       onChanged: (_) => setState(() {
-                            _formError = null;
-                            _confirmError = null;
-                          }),
+                        _formError = null;
+                        _confirmError = null;
+                      }),
                       prefixIcon: Icons.lock_outline_rounded,
                       autofillHints: const [AutofillHints.newPassword],
                       textInputAction: TextInputAction.done,
@@ -192,8 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: TextStyle(color: AppColors.dim, fontSize: 13),
                         ),
                         TextButton(
-                          onPressed: () =>
-                              Navigator.of(context).pop(),
+                          onPressed: () => Navigator.of(context).pop(),
                           style: TextButton.styleFrom(
                             foregroundColor: AppColors.radium,
                             textStyle: const TextStyle(

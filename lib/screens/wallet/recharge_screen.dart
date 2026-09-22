@@ -39,7 +39,9 @@ class _RechargeScreenState extends State<RechargeScreen> {
   double? get _effectiveAmount {
     if (_customMode) {
       final v = Validators.amount(_customController.text);
-      return v == null ? double.tryParse(_customController.text.replaceAll(',', '')) : null;
+      return v == null
+          ? double.tryParse(_customController.text.replaceAll(',', ''))
+          : null;
     }
     return _selected;
   }
@@ -132,28 +134,34 @@ class _RechargeScreenState extends State<RechargeScreen> {
   }
 
   Widget _buildForm() {
-    final balance = Services.wallet.balance;
-    return ListView(
-      key: const ValueKey('form'),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-      children: [
-        Row(
+    return ListenableBuilder(
+      listenable: Services.wallet,
+      builder: (context, _) {
+        final balance = Services.wallet.balance;
+        return ListView(
+          key: const ValueKey('form'),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
-            const PlacardLabel(AppStrings.currentBalance, color: AppColors.faint),
-            const Spacer(),
-            Text(
-              Formatters.currency(balance),
-              style: const TextStyle(
-                color: AppColors.luminous,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                fontFeatures: [FontFeature.tabularFigures()],
-              ),
+            Row(
+              children: [
+                const PlacardLabel(
+                  AppStrings.currentBalance,
+                  color: AppColors.faint,
+                ),
+                const Spacer(),
+                Text(
+                  Formatters.currency(balance),
+                  style: const TextStyle(
+                    color: AppColors.luminous,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: 26),
-        const PlacardLabel(AppStrings.selectAmount, size: 11, spacing: 2),
+            const SizedBox(height: 26),
+            const PlacardLabel(AppStrings.selectAmount, size: 11, spacing: 2),
             const SizedBox(height: 12),
             Wrap(
               spacing: 10,
@@ -187,7 +195,9 @@ class _RechargeScreenState extends State<RechargeScreen> {
                         keyboardType: TextInputType.number,
                         inputFormatters: amountFormatters,
                         onChanged: (_) => setState(() {
-                          _amountError = Validators.amount(_customController.text);
+                          _amountError = Validators.amount(
+                            _customController.text,
+                          );
                         }),
                         prefixIcon: Icons.payments_outlined,
                       ),
@@ -216,7 +226,10 @@ class _RechargeScreenState extends State<RechargeScreen> {
                   Expanded(
                     child: Text(
                       AppStrings.paymentSimulated,
-                      style: const TextStyle(color: AppColors.dim, fontSize: 11.5),
+                      style: const TextStyle(
+                        color: AppColors.dim,
+                        fontSize: 11.5,
+                      ),
                     ),
                   ),
                 ],
@@ -236,7 +249,9 @@ class _RechargeScreenState extends State<RechargeScreen> {
               ),
             ),
           ],
-      );
+        );
+      },
+    );
   }
 }
 
@@ -261,13 +276,13 @@ class _OutcomeSheetState extends State<_OutcomeSheet> {
     final title = success
         ? AppStrings.paymentSuccessTitle
         : widget.result.status == PaymentStatus.declined
-            ? AppStrings.paymentDeclinedTitle
-            : AppStrings.paymentTimeoutTitle;
+        ? AppStrings.paymentDeclinedTitle
+        : AppStrings.paymentTimeoutTitle;
     final body = success
         ? AppStrings.paymentSuccessBody
         : widget.result.status == PaymentStatus.declined
-            ? AppStrings.paymentDeclinedBody
-            : AppStrings.paymentTimeoutBody;
+        ? AppStrings.paymentDeclinedBody
+        : AppStrings.paymentTimeoutBody;
 
     return SafeArea(
       child: Padding(
@@ -327,9 +342,15 @@ class _OutcomeSheetState extends State<_OutcomeSheet> {
                 ),
                 child: Column(
                   children: [
-                    _readout(AppStrings.transactionId, widget.result.transactionId),
+                    _readout(
+                      AppStrings.transactionId,
+                      widget.result.transactionId,
+                    ),
                     const SizedBox(height: 12),
-                    _readout(AppStrings.amount, Formatters.currency(widget.result.amount)),
+                    _readout(
+                      AppStrings.amount,
+                      Formatters.currency(widget.result.amount),
+                    ),
                     const SizedBox(height: 12),
                     _readout(AppStrings.method, widget.result.method),
                   ],

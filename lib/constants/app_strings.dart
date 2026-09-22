@@ -119,6 +119,31 @@ abstract final class AppStrings {
       'Internship prototype: Phase 1–2 (UI + simulated payments).\n'
       'Firebase, backend and PayFast sandbox land in later phases.';
 
+  // Phone verification
+  static const verifyPhoneTitle = 'VERIFY PHONE';
+  static const verifyPhoneSubtitle =
+      'Enter your mobile number to receive a verification code';
+  static const phoneNumber = 'PHONE NUMBER';
+  static const phoneHint = '0300 123 4567';
+  static const sendCode = 'SEND CODE';
+  static const otpTitle = 'ENTER CODE';
+  static const otpSentTo = 'CODE SENT TO';
+  static const verifyOtp = 'VERIFY';
+  static const resendCode = 'Resend code in';
+  static const resendNow = 'RESEND CODE';
+  static const phoneVerified = 'Phone verified';
+  static const phoneVerifiedBody = 'Redirecting to your panel...';
+  static const phoneDemoHint = 'Demo: any 11-digit number works';
+  static const errPhoneRequired = 'Enter your phone number';
+  static const errPhoneInvalid = 'Enter a valid Pakistani mobile number';
+  static const errOtpRequired = 'Enter the 6-digit code';
+  static const errOtpInvalid = 'Enter a valid 6-digit code';
+  static const errOtpFailed = 'Verification failed. Try again.';
+  static const errTooManyRequests = 'Too many attempts. Wait a moment.';
+  static const errQuotaExceeded = 'SMS quota exceeded. Try again later.';
+  static const errInvalidPhone = 'Invalid phone number.';
+  static const errSessionExpired = 'Code expired. Request a new one.';
+
   // Errors
   static const genericError = 'Something went wrong. Try again.';
 }

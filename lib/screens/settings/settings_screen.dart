@@ -36,7 +36,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
-            const PlacardLabel('PREFERENCES', size: 10, spacing: 2, color: AppColors.faint),
+            const PlacardLabel(
+              'PREFERENCES',
+              size: 10,
+              spacing: 2,
+              color: AppColors.faint,
+            ),
             const SizedBox(height: 10),
             _toggleTile(
               icon: Icons.notifications_none_rounded,
@@ -76,12 +81,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, size: 20, color: AppColors.radium),
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 20,
+                    color: AppColors.radium,
+                  ),
                   const SizedBox(width: 14),
                   const Expanded(
                     child: Text(
                       AppStrings.aboutBody,
-                      style: TextStyle(color: AppColors.dim, fontSize: 12, height: 1.5),
+                      style: TextStyle(
+                        color: AppColors.dim,
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ],
@@ -91,7 +104,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                PlacardLabel('${AppStrings.version}  1.0.0', size: 9.5, spacing: 1.6),
+                PlacardLabel(
+                  '${AppStrings.version}  1.0.0',
+                  size: 9.5,
+                  spacing: 1.6,
+                ),
               ],
             ),
           ],
@@ -135,7 +152,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 2),
                   Text(
                     body,
-                    style: const TextStyle(color: AppColors.faint, fontSize: 11.5),
+                    style: const TextStyle(
+                      color: AppColors.faint,
+                      fontSize: 11.5,
+                    ),
                   ),
                 ],
               ),

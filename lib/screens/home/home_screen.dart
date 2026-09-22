@@ -45,7 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined, color: AppColors.dim),
-            selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.radium),
+            selectedIcon: Icon(
+              Icons.receipt_long_rounded,
+              color: AppColors.radium,
+            ),
             label: 'History',
           ),
           NavigationDestination(

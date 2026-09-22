@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:payment_system/firebase/firebase_bootstrap.dart';
 import 'package:payment_system/main.dart';
 import 'package:payment_system/utils/formatters.dart';
 
 void main() {
+  test('Firebase bootstrap degrades gracefully without config', () async {
+    // In a test environment no google-services config exists: the probe
+    // must fail softly and leave the app in simulated mode.
+    await FirebaseBootstrap.initialize();
+    expect(FirebaseBootstrap.configured, isFalse);
+  });
+
   group('Formatters', () {
     test('currency groups thousands without decimals', () {
       expect(Formatters.currency(5000), 'PKR 5,000');

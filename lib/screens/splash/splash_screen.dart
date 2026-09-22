@@ -38,9 +38,13 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     await Services.auth.restoreSession();
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(
-      Services.auth.isSignedIn ? Routes.home : Routes.login,
-    );
+    if (!Services.auth.isSignedIn) {
+      Navigator.of(context).pushReplacementNamed(Routes.login);
+    } else if (Services.auth.isPhoneVerified) {
+      Navigator.of(context).pushReplacementNamed(Routes.home);
+    } else {
+      Navigator.of(context).pushReplacementNamed(Routes.verifyPhone);
+    }
   }
 
   @override
@@ -91,6 +95,7 @@ class _SplashScreenState extends State<SplashScreen> {
 abstract final class Routes {
   static const login = '/login';
   static const register = '/register';
+  static const verifyPhone = '/verify-phone';
   static const home = '/home';
   static const recharge = '/recharge';
   static const history = '/history';

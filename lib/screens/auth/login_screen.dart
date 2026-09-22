@@ -50,7 +50,11 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await Services.auth.login(_email.text, _password.text);
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(Routes.home);
+      if (Services.auth.isPhoneVerified) {
+        Navigator.of(context).pushReplacementNamed(Routes.home);
+      } else {
+        Navigator.of(context).pushReplacementNamed(Routes.verifyPhone);
+      }
     } on AppException catch (e) {
       if (!mounted) return;
       setState(() => _formError = e.message);
@@ -97,7 +101,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     Text(
                       AppStrings.signInSubtitle,
-                      style: const TextStyle(color: AppColors.dim, fontSize: 13.5),
+                      style: const TextStyle(
+                        color: AppColors.dim,
+                        fontSize: 13.5,
+                      ),
                     ),
                     const SizedBox(height: 30),
                     AppTextField(
@@ -123,7 +130,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       suffix: IconButton(
                         onPressed: () => setState(() => _obscure = !_obscure),
                         icon: Icon(
-                          _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          _obscure
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
                           size: 20,
                           color: AppColors.faint,
                         ),
@@ -146,10 +155,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        const Expanded(child: Divider(color: AppColors.hairline, height: 1)),
+                        const Expanded(
+                          child: Divider(color: AppColors.hairline, height: 1),
+                        ),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: PlacardLabel(AppStrings.demoHint, size: 8.5, spacing: 1),
+                          child: PlacardLabel(
+                            AppStrings.demoHint,
+                            size: 8.5,
+                            spacing: 1,
+                          ),
                         ),
                         Expanded(
                           child: Divider(

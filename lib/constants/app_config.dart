@@ -31,4 +31,10 @@ abstract final class AppConfig {
   ];
 
   static const String sharedPrefsSessionKey = 'session_email';
+
+  /// Phone verification config.
+  static const Duration otpResendCooldown = Duration(seconds: 30);
+  static const int otpLength = 6;
+  static const String phonePrefix = '+92';
+  static const int phoneLocalLength = 11; // 03XXXXXXXXX
 }

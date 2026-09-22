@@ -6,12 +6,16 @@ class AppUser {
     required this.name,
     required this.email,
     required this.createdAt,
+    this.phoneNumber,
+    this.phoneVerified = false,
   });
 
   final String id;
   final String name;
   final String email;
   final DateTime createdAt;
+  final String? phoneNumber;
+  final bool phoneVerified;
 
   /// Initials for the avatar ring, e.g. "AR".
   String get initials {

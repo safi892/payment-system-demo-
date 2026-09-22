@@ -14,7 +14,8 @@ class TransactionHistoryScreen extends StatefulWidget {
   const TransactionHistoryScreen({super.key});
 
   @override
-  State<TransactionHistoryScreen> createState() => _TransactionHistoryScreenState();
+  State<TransactionHistoryScreen> createState() =>
+      _TransactionHistoryScreenState();
 }
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
@@ -23,75 +24,87 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = Services.wallet.filter(
-      type: _filter,
-      newestFirst: _newestFirst,
-    );
+    return ListenableBuilder(
+      listenable: Services.wallet,
+      builder: (context, _) {
+        final rows = Services.wallet.filter(
+          type: _filter,
+          newestFirst: _newestFirst,
+        );
 
-    return Scaffold(
-      backgroundColor: AppColors.panel,
-      appBar: AppBar(
-        backgroundColor: AppColors.panel,
-        foregroundColor: AppColors.luminous,
-        elevation: 0,
-        title: const Text(
-          AppStrings.historyTitle,
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-        ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _filterChip(AppStrings.all, null),
-                        _filterChip(AppStrings.rechargeFilter, TransactionType.recharge),
-                        _filterChip(AppStrings.chargeFilter, TransactionType.serviceCharge),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _sortButton(),
-                ],
-              ),
+        return Scaffold(
+          backgroundColor: AppColors.panel,
+          appBar: AppBar(
+            backgroundColor: AppColors.panel,
+            foregroundColor: AppColors.luminous,
+            elevation: 0,
+            title: const Text(
+              AppStrings.historyTitle,
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () => Services.wallet.refresh(),
-                color: AppColors.radium,
-                backgroundColor: AppColors.surfaceRaised,
-                child: rows.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: const [
-                          SizedBox(height: 80),
-                          EmptyState(
-                            title: AppStrings.emptyTitle,
-                            body: AppStrings.emptyBody,
-                          ),
-                        ],
-                      )
-                    : ListView.separated(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                        itemCount: rows.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) =>
-                            TransactionTile(transaction: rows[index]),
+          ),
+          body: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _filterChip(AppStrings.all, null),
+                            _filterChip(
+                              AppStrings.rechargeFilter,
+                              TransactionType.recharge,
+                            ),
+                            _filterChip(
+                              AppStrings.chargeFilter,
+                              TransactionType.serviceCharge,
+                            ),
+                          ],
+                        ),
                       ),
-              ),
+                      const SizedBox(width: 8),
+                      _sortButton(),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () => Services.wallet.refresh(),
+                    color: AppColors.radium,
+                    backgroundColor: AppColors.surfaceRaised,
+                    child: rows.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: const [
+                              SizedBox(height: 80),
+                              EmptyState(
+                                title: AppStrings.emptyTitle,
+                                body: AppStrings.emptyBody,
+                              ),
+                            ],
+                          )
+                        : ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                            itemCount: rows.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) =>
+                                TransactionTile(transaction: rows[index]),
+                          ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -150,7 +163,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           child: Row(
             children: [
               Icon(
-                _newestFirst ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                _newestFirst
+                    ? Icons.arrow_downward_rounded
+                    : Icons.arrow_upward_rounded,
                 size: 14,
                 color: AppColors.radium,
               ),

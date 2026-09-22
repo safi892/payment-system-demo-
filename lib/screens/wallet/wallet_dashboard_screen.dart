@@ -40,74 +40,81 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         .where((t) => t.type == TransactionType.recharge)
         .fold<double>(0, (sum, t) => sum + t.amount);
 
-    return Scaffold(
-      backgroundColor: AppColors.panel,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _sync,
-          color: AppColors.radium,
-          backgroundColor: AppColors.surfaceRaised,
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                sliver: SliverList.list(
-                  children: [
-                    _header(user.name, user.email),
-                    const SizedBox(height: 26),
-                    BalanceCard(balance: wallet.balance, isLive: !_syncing),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        StatCell(
-                          label: AppStrings.totalRecharged,
-                          value: 'PKR ${Formatters.amount(totalRecharged)}',
-                          accent: true,
-                        ),
-                        const SizedBox(width: 12),
-                        StatCell(
-                          label: AppStrings.transactions,
-                          value: Formatters.amount(wallet.transactions.length),
+    return ListenableBuilder(
+      listenable: wallet,
+      builder: (context, _) => Scaffold(
+        backgroundColor: AppColors.panel,
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _sync,
+            color: AppColors.radium,
+            backgroundColor: AppColors.surfaceRaised,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  sliver: SliverList.list(
+                    children: [
+                      _header(user.name, user.email),
+                      const SizedBox(height: 26),
+                      BalanceCard(balance: wallet.balance, isLive: !_syncing),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          StatCell(
+                            label: AppStrings.totalRecharged,
+                            value: 'PKR ${Formatters.amount(totalRecharged)}',
+                            accent: true,
+                          ),
+                          const SizedBox(width: 12),
+                          StatCell(
+                            label: AppStrings.transactions,
+                            value: Formatters.amount(
+                              wallet.transactions.length,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      PrimaryButton(
+                        label: AppStrings.rechargeButton,
+                        icon: Icons.add_rounded,
+                        onPressed: () async {
+                          await Navigator.of(
+                            context,
+                          ).pushNamed(Routes.recharge);
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                      if (_syncError != null) ...[
+                        const SizedBox(height: 14),
+                        ErrorBanner(
+                          message: _syncError!,
+                          onDismiss: () => setState(() => _syncError = null),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 24),
-                    PrimaryButton(
-                      label: AppStrings.rechargeButton,
-                      icon: Icons.add_rounded,
-                      onPressed: () async {
-                        await Navigator.of(context)
-                            .pushNamed(Routes.recharge);
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                    if (_syncError != null) ...[
-                      const SizedBox(height: 14),
-                      ErrorBanner(
-                        message: _syncError!,
-                        onDismiss: () => setState(() => _syncError = null),
+                      const SizedBox(height: 30),
+                      SectionHeader(
+                        title: AppStrings.recentActivity,
+                        actionLabel: AppStrings.viewAll,
+                        onAction: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const TransactionHistoryScreen(),
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 4),
+                      for (final t in recent)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: TransactionTile(transaction: t),
+                        ),
                     ],
-                    const SizedBox(height: 30),
-                    SectionHeader(
-                      title: AppStrings.recentActivity,
-                      actionLabel: AppStrings.viewAll,
-                      onAction: () => Navigator.of(context)
-                          .push(MaterialPageRoute(
-                              builder: (_) =>
-                                  const TransactionHistoryScreen())),
-                    ),
-                    const SizedBox(height: 4),
-                    for (final t in recent)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: TransactionTile(transaction: t),
-                      ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -119,8 +126,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     final greeting = hour < 12
         ? AppStrings.goodMorning
         : hour < 17
-            ? AppStrings.goodAfternoon
-            : AppStrings.goodEvening;
+        ? AppStrings.goodAfternoon
+        : AppStrings.goodEvening;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -140,14 +147,18 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 3),
-              PlacardLabel(Formatters.date(DateTime.now()), size: 9.5, spacing: 1.6),
+              PlacardLabel(
+                Formatters.date(DateTime.now()),
+                size: 9.5,
+                spacing: 1.6,
+              ),
             ],
           ),
         ),
         GestureDetector(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          ),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
           child: Services.auth.currentUser == null
               ? const SizedBox.shrink()
               : AvatarRing(user: Services.auth.currentUser!, size: 42),

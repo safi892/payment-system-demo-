@@ -1,0 +1,110 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PROTOTYPE RULES (client-writes mode)
+    //
+    // Phase 3 has no server yet: the client runs the atomic credit
+    // transaction (wallet balance + ledger entry + payment verification
+    // together). Rules therefore allow the client to write its own data,
+    // but constrain it:
+    //   • everything is keyed on request.auth.uid (no cross-user access)
+    //   • a wallet can only be born empty and its balance can only
+    //     grow (credits); client-initiated decreases are denied
+    //   • the ledger is append-only (no update/delete)
+    //   • payments are scoped to their owner; audit logs are server-only
+    //
+    // PRODUCTION: replace with the locked rules in the block at the
+    // bottom of this file — balance updates become server-only (allow
+    // update: if false) once the FastAPI backend (Admin SDK) exists.
+    // ═══════════════════════════════════════════════════════════════════
+
+    // ---------- Helpers ----------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Whole or signed amounts are allowed (credits positive, service
+    // charges negative); magnitude is capped like the app validator.
+    function amountIsValid() {
+      return request.resource.data.amount is num
+          && request.resource.data.amount != 0
+          && request.resource.data.amount.abs() <= 1000000.0;
+    }
+
+    // ---------- users/{uid} ----------
+
+    match /users/{uid} {
+      allow read, create, update: if isOwner(uid);
+      allow delete: if false;
+    }
+
+    // ---------- wallets/{uid} ----------
+
+    // Prototype: a wallet may only be born empty, and the client may only
+    // ever increase the balance (the atomic credit). Production: updates
+    // are denied entirely and the backend moves the balance.
+    match /wallets/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+          && request.resource.data.balance == 0.0;
+      allow update: if isOwner(uid)
+          && request.resource.data.balance >= resource.data.balance;
+      allow delete: if false;
+    }
+
+    // ---------- wallet_transactions/{uid}/ledger/{txnId} ----------
+    // Append-only ledger. txnId doubles as the idempotency key (merchant
+    // reference), so the same transaction can never be recorded twice.
+
+    match /wallet_transactions/{uid}/ledger/{txnId} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && amountIsValid()
+          && request.resource.data.status in ['completed', 'pending', 'failed'];
+      allow update, delete: if false;
+    }
+
+    // ---------- payments/{paymentId} ----------
+    // One doc per payment attempt, always scoped to its owner. The client
+    // may create and transition its own payment lifecycle (initiated →
+    // completed/failed/timed_out).
+
+    match /payments/{paymentId} {
+      allow read, create, update:
+          if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ---------- payment_logs/{logId} ----------
+    // Audit trail: written by the server only, readable by the owner.
+
+    match /payment_logs/{logId} {
+      allow read: if isSignedIn()
+          && resource.data.userId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // PRODUCTION RULES (server-writes mode) — deploy when the FastAPI
+  // backend exists. Balance and ledger mutations move to Admin SDK
+  // transactions; the client keeps read + self-registration only.
+  //
+  //   match /wallets/{uid} {
+  //     allow read: if isOwner(uid);
+  //     allow create: if isOwner(uid)
+  //         && request.resource.data.balance == 0.0;
+  //     allow update, delete: if false;
+  //   }
+  //   match /wallet_transactions/{uid}/ledger/{txnId} {
+  //     allow read: if isOwner(uid);
+  //     allow create, update, delete: if false;   // server-writes only
+  //   }
+  // ═══════════════════════════════════════════════════════════════════
+}
