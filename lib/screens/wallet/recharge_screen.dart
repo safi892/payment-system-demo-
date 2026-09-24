@@ -12,10 +12,10 @@ import '../../widgets/app_text_field.dart';
 import '../../widgets/buttons.dart';
 import '../../widgets/placard_label.dart';
 import '../../widgets/step_indicator.dart';
+import 'payfast_checkout_modal.dart';
 
 /// Recharge flow: pick a preset or custom amount, then run the payment
-/// simulation (create → confirm → verify). The UI contract here never
-/// changes when Phase 5 swaps the simulation for the real backend.
+/// simulation (create → confirm → verify) or the real PayFast checkout.
 class RechargeScreen extends StatefulWidget {
   const RechargeScreen({super.key});
 
@@ -29,6 +29,18 @@ class _RechargeScreenState extends State<RechargeScreen> {
   final _customController = TextEditingController();
   String? _amountError;
   bool _busy = false;
+  bool _usePayFast = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGatewayPreference();
+  }
+
+  Future<void> _loadGatewayPreference() async {
+    final cfg = await Services.payfast.getConfig();
+    if (mounted) setState(() => _usePayFast = cfg.isEnabled);
+  }
 
   @override
   void dispose() {
@@ -72,6 +84,22 @@ class _RechargeScreenState extends State<RechargeScreen> {
   Future<void> _startPayment() async {
     final amount = _effectiveAmount;
     if (amount == null) return;
+
+    if (_usePayFast) {
+      final payFastResult = await PayFastCheckoutModal.show(context, amount);
+      if (payFastResult == null) return;
+      if (!mounted) return;
+
+      if (payFastResult.isSuccess) {
+        Services.wallet.credit(
+          amount: amount,
+          transactionId: payFastResult.transactionId,
+          method: payFastResult.method,
+        );
+      }
+      await _showOutcome(payFastResult);
+      return;
+    }
 
     setState(() => _busy = true);
     final result = await Services.payment.recharge(amount);
@@ -212,35 +240,54 @@ class _RechargeScreenState extends State<RechargeScreen> {
               busy: _busy,
             ),
             const SizedBox(height: 22),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.hairline),
-              ),
-              child: Row(
-                children: [
-                  const LampDot(WidgetStatus.info, size: 7),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      AppStrings.paymentSimulated,
-                      style: const TextStyle(
-                        color: AppColors.dim,
-                        fontSize: 11.5,
+            GestureDetector(
+              onTap: () async {
+                final next = !_usePayFast;
+                setState(() => _usePayFast = next);
+                final cfg = await Services.payfast.getConfig();
+                cfg.isEnabled = next;
+                await Services.payfast.updateConfig(cfg);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: _usePayFast ? AppColors.radium.withValues(alpha: 0.6) : AppColors.hairline,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    LampDot(_usePayFast ? WidgetStatus.completed : WidgetStatus.info, size: 7),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _usePayFast ? 'GATEWAY: PAYFAST PAKISTAN · CHECKOUT ACTIVE' : AppStrings.paymentSimulated,
+                        style: TextStyle(
+                          color: _usePayFast ? AppColors.radium : AppColors.dim,
+                          fontSize: 11.5,
+                          fontWeight: _usePayFast ? FontWeight.w600 : FontWeight.normal,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    Icon(
+                      _usePayFast ? Icons.check_circle_outline_rounded : Icons.swap_horiz_rounded,
+                      size: 16,
+                      color: _usePayFast ? AppColors.radium : AppColors.dim,
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 2),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
               child: Text(
-                AppStrings.simHint,
-                style: TextStyle(
+                _usePayFast
+                    ? 'Card 3DS & Mobile Wallets (JazzCash/EasyPaisa) test checkout with OTP.'
+                    : 'Tap above to switch to PayFast Gateway or keep fast simulation.',
+                style: const TextStyle(
                   color: AppColors.faint,
                   fontSize: 9,
                   letterSpacing: 0.5,

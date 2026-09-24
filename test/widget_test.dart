@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:payment_system/firebase/firebase_bootstrap.dart';
 import 'package:payment_system/main.dart';
+import 'package:payment_system/models/payfast_config.dart';
+import 'package:payment_system/services/payfast_service.dart';
 import 'package:payment_system/utils/formatters.dart';
 
 void main() {
@@ -70,4 +72,58 @@ void main() {
       expect(find.text('WALLET BALANCE'), findsOneWidget);
     });
   });
+
+  group('PayFast Gateway Integration', () {
+    test('PayFastConfig loads defaults and persists', () async {
+      SharedPreferences.setMockInitialValues({});
+      final config = await PayFastConfig.load();
+      expect(config.merchantId, '14833');
+      expect(config.environment, PayFastEnvironment.sandbox);
+      expect(config.isEnabled, isTrue);
+
+      config.merchantId = 'MERCHANT-TEST-99';
+      config.isEnabled = true;
+      await config.save();
+
+      final reloaded = await PayFastConfig.load();
+      expect(reloaded.merchantId, 'MERCHANT-TEST-99');
+      expect(reloaded.isEnabled, isTrue);
+    });
+
+    test('PayFastService processes card payment and verifies OTP', () async {
+      final service = PayFastService();
+      final cardRes = await service.processCardPayment(
+        amount: 5000,
+        basketId: 'BASKET-12345',
+        cardNumber: '4111 1111 1111 1111',
+        expiryMonth: '12',
+        expiryYear: '28',
+        cvv: '123',
+        customerEmail: 'test@gopayfast.com',
+        customerMobile: '03001234567',
+      );
+
+      expect(cardRes.success, isTrue);
+      expect(cardRes.requiresOtp, isTrue);
+
+      final otpRes = await service.verifyOtp(
+        transactionId: cardRes.transactionId,
+        otp: '1234',
+      );
+
+      expect(otpRes.success, isTrue);
+      expect(otpRes.status, 'SUCCESS');
+    });
+
+    test('PayFastService rejects invalid OTP code', () async {
+      final service = PayFastService();
+      final otpRes = await service.verifyOtp(
+        transactionId: 'BASKET-FAIL',
+        otp: '9999',
+      );
+
+      expect(otpRes.success, isFalse);
+    });
+  });
 }
+

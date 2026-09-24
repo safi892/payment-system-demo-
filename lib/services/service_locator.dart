@@ -1,4 +1,5 @@
 import 'auth_service.dart';
+import 'payfast_service.dart';
 import 'payment_service.dart';
 import 'wallet_service.dart';
 
@@ -9,6 +10,7 @@ abstract final class Services {
   static final AuthService auth = AuthService();
   static final WalletService wallet = WalletService();
   static final PaymentService payment = PaymentService();
+  static final PayFastService payfast = PayFastService();
 }
 
 /// The single error shape the UI knows how to render.

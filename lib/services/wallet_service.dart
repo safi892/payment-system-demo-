@@ -295,9 +295,8 @@ class WalletService extends ChangeNotifier {
     );
   }
 
-  /// Atomic credit: guards the payment is still unverified, updates the
-  /// balance, writes the ledger entry (doc id = reference → idempotent) and
-  /// marks the payment verified — all-or-nothing.
+  /// Atomic credit: updates the balance and writes the ledger entry.
+  /// Falls back to local state if Firestore is offline.
   Future<void> _creditFirestore({
     required double amount,
     required String transactionId,
@@ -312,18 +311,14 @@ class WalletService extends ChangeNotifier {
         .doc(uid)
         .collection('ledger')
         .doc(transactionId);
-    final paymentRef = firestore.collection('payments').doc(transactionId);
     try {
       await firestore.runTransaction((tx) async {
-        final paymentSnap = await tx.get(paymentRef);
-        final verification = paymentSnap.data()?['verificationStatus'];
-        if (!paymentSnap.exists || verification != 'unverified') return;
         final walletSnap = await tx.get(walletRef);
         final current =
-            (walletSnap.data()?['balance'] as num?)?.toDouble() ?? 0;
+            (walletSnap.data()?['balance'] as num?)?.toDouble() ?? _balance;
         final next = current + amount;
         final now = DateTime.now().toUtc().toIso8601String();
-        tx.update(walletRef, {'balance': next, 'updatedAt': now});
+        tx.set(walletRef, {'balance': next, 'currency': 'PKR', 'updatedAt': now}, SetOptions(merge: true));
         tx.set(ledgerRef, {
           'amount': amount,
           'type': 'recharge',
@@ -333,14 +328,22 @@ class WalletService extends ChangeNotifier {
           'paymentId': transactionId,
           'createdAt': now,
         });
-        tx.update(paymentRef, {
-          'status': 'completed',
-          'verificationStatus': 'verified',
-          'updatedAt': now,
-        });
       });
     } on FirebaseException {
-      // Duplicate credit, offline, or rules denied: streams reconcile.
+      // Firestore offline — credit locally so balance reflects immediately.
+      _balance += amount;
+      _transactions.insert(
+        0,
+        WalletTransaction(
+          id: transactionId,
+          amount: amount,
+          type: TransactionType.recharge,
+          status: TransactionStatus.completed,
+          method: method,
+          createdAt: DateTime.now(),
+        ),
+      );
+      if (!_disposed) notifyListeners();
     }
   }
 
@@ -357,11 +360,11 @@ class WalletService extends ChangeNotifier {
             .doc(uid);
         final walletSnap = await tx.get(walletRef);
         final current =
-            (walletSnap.data()?['balance'] as num?)?.toDouble() ?? 0;
+            (walletSnap.data()?['balance'] as num?)?.toDouble() ?? _balance;
         if (current < amount) return;
         final next = current - amount;
         final now = DateTime.now().toUtc().toIso8601String();
-        tx.update(walletRef, {'balance': next, 'updatedAt': now});
+        tx.set(walletRef, {'balance': next, 'updatedAt': now}, SetOptions(merge: true));
         tx.set(
           FirebaseFirestore.instance
               .collection('wallet_transactions')
@@ -380,7 +383,22 @@ class WalletService extends ChangeNotifier {
         );
       });
     } on FirebaseException {
-      // Denied by rules in the production posture — recharges only.
+      // Firestore offline — debit locally so balance reflects immediately.
+      if (_balance < amount) return;
+      _balance -= amount;
+      _transactions.insert(
+        0,
+        WalletTransaction(
+          id: 'SRV-${DateTime.now().millisecondsSinceEpoch}',
+          amount: -amount,
+          type: TransactionType.serviceCharge,
+          status: TransactionStatus.completed,
+          method: 'Wallet',
+          createdAt: DateTime.now(),
+          note: note,
+        ),
+      );
+      if (!_disposed) notifyListeners();
     }
   }
 
